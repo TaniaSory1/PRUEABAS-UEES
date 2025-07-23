@@ -19,8 +19,8 @@ CREATE TABLE [dbo].[tbl_docente](
 --TABLA ESTUDIANTE
 CREATE TABLE [dbo].[tbl_est](
 	[id_est] [numeric](18, 0) NOT NULL,
-	[nombre] [nchar](10) NOT NULL,
-	[carrera] [nchar](10) NULL,
+	[nombre] [varchar](100) NOT NULL,
+	[carrera] [varnchar](10) NULL,
 	[identif] [nchar](10) NULL,
 	[pws] [nchar](10) NULL,
  CONSTRAINT [PK_tbl_est] PRIMARY KEY CLUSTERED 
@@ -52,7 +52,6 @@ CREATE TABLE [dbo].[tbl_nfn](
 	[n2] [decimal](18, 2) NOT NULL,
 	[n3] [decimal](18, 2) NOT NULL,
 	[nf] [decimal](18, 2) NOT NULL,
-	[est] [decimal](18, 2) NOT NULL,
  CONSTRAINT [PK_tbl_nfn] PRIMARY KEY CLUSTERED 
 (
 	[id_nf] ASC
@@ -108,38 +107,51 @@ REFERENCES [dbo].[tbl_materias] ([id_mat])
 
 ALTER TABLE [dbo].[tbl_nfn] CHECK CONSTRAINT [FK_tbl_nfn_tbl_materias]
 
---procedimiento almacenado para mover las notas de la tabbla temporal a la tabla de notas finales, y generar la nota final en automatico
 
+--ingreso de datos de roles
+INSERT INTO tbl_rol (id_rol,nombre)VALUES 
+	('1','docente'),
+	('2','estudiante'),
+	('3','adm'),
+	('4','user');
+
+
+--ingreso de datos de docente
+INSERT INTO tbl_docente (id_docente, id_rol, nombre, ident, pws) 
+VALUES 
+	(1, 1, 'Carlos García', 10001, 'passdocente'),
+	(2, 2, 'Ana Pérez', 10002, 'adminclave');
+
+
+--ingreso de datos de estudiante
+INSERT INTO tbl_est (id_est, nombre, carrera, identif, pws)
+VALUES 
+	(1, 'Maria','IngSis','12345','estclave1'),
+	(2,'Juan','IngInd','67890','estclave2'),
+	(3,'Laura','IngSis','54321','estclave3');
+
+
+--ingreso de datos de materias
+INSERT INTO tbl_materias (id_mat, nombre)
+VALUES (1, 'Matematica'),(2, 'Programacion'),(3, 'Fisica');
+
+
+--ingreso de datos de Notas temporales
+INSERT INTO tbl_ntemp (id_ntemp, id_est, id_mat, id_doc, n1, n2, n3)
+VALUES (1, 201, 301, 101, 7.0, 8.0, 9.0),
+	(2, 202, 302, 101, 6.0, 6.5, 5.0),(3, 203, 303, 102, 9.0, 9.5, 10.0);
+
+
+--procedimiento almacenado para mover las notas de la tabbla temporal a la tabla de notas finales, generando la nota final en automatico y borrando la base anterior
 CREATE PROCEDURE procesarNota
 AS
 BEGIN
     SET NOCOUNT ON;
-
-    -- Insertar los datos desde tbl_ntemp hacia tbl_nfn con cálculo de nf y est
-    INSERT INTO tbl_nfn (
-        id_nf,
-        id_est,
-        id_mat,
-        id_doc,
-        n1,
-        n2,
-        n3,
-        nf,
-        est
+    INSERT INTO tbl_nfn (id_nf,id_est,id_mat,id_doc,n1,n2,n3,nf
     )
     SELECT
-        id_ntemp,             -- Se asume que id_ntemp será usado como id_nf
-        id_est,
-        id_mat,
-        id_doc,
-        n1,
-        n2,
-        n3,
+        id_ntemp,id_est,id_mat,id_doc,n1,n2,n3,
         (n1 * 0.30 + n2 * 0.30 + n3 * 0.40) AS nf,
-        CASE 
-            WHEN (n1 * 0.30 + n2 * 0.30 + n3 * 0.40) >= 7 THEN 1
-            ELSE 0
-        END AS est
     FROM tbl_ntemp;
 
     -- Borrar todos los datos de la tabla temporal
@@ -147,3 +159,32 @@ BEGIN
 END
 GO
 
+--consulta para ver las notas por estudiante con datos en lugar de id
+SELECT nfn.id_nf,est.nombre AS nombre_estudiante,mat.nombre AS 
+nombre_materia,doc.nombre AS nombre_docente,nfn.n1,nfn.n2,nfn.n3,
+nfn.nf,nfn.est FROM tbl_nfn nfn
+INNER JOIN tbl_est est ON nfn.id_est = est.id_est
+INNER JOIN tbl_materias mat ON nfn.id_mat = mat.id_mat
+INNER JOIN tbl_docente doc ON nfn.id_doc = doc.id_docente;
+
+--consulta para buscar notas de un estudiante específico
+SELECT * FROM vw_notas_con_nombres WHERE nombre_estudiante LIKE '%Juan%';
+
+--ver promedio general de cada estudiante
+SELECT est.nombre AS nombre_estudiante,AVG(nfn.nf) AS promedio_final
+FROM tbl_nfn nfn
+INNER JOIN tbl_est est ON nfn.id_est = est.id_est
+GROUP BY est.nombre;
+
+--consulta Estudiantes que han reprobado alguna materia
+SELECT est.nombre AS nombre_estudiante,mat.nombre AS nombre_materia,
+nfn.nf FROM tbl_nfn nfn
+INNER JOIN tbl_est est ON nfn.id_est = est.id_est
+INNER JOIN tbl_materias mat ON nfn.id_mat = mat.id_mat
+WHERE nfn.nf < 7;
+
+--consulta cuantos docentes hay por materia
+SELECT DISTINCT doc.nombre AS nombre_docente,mat.nombre AS 
+nombre_materia FROM tbl_nfn nfn
+INNER JOIN tbl_docente doc ON nfn.id_doc = doc.id_docente
+INNER JOIN tbl_materias mat ON nfn.id_mat = mat.id_mat;
