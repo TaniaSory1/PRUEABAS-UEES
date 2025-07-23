@@ -108,4 +108,42 @@ REFERENCES [dbo].[tbl_materias] ([id_mat])
 
 ALTER TABLE [dbo].[tbl_nfn] CHECK CONSTRAINT [FK_tbl_nfn_tbl_materias]
 
---store procedures
+--procedimiento almacenado para mover las notas de la tabbla temporal a la tabla de notas finales, y generar la nota final en automatico
+
+CREATE PROCEDURE procesarNota
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Insertar los datos desde tbl_ntemp hacia tbl_nfn con cálculo de nf y est
+    INSERT INTO tbl_nfn (
+        id_nf,
+        id_est,
+        id_mat,
+        id_doc,
+        n1,
+        n2,
+        n3,
+        nf,
+        est
+    )
+    SELECT
+        id_ntemp,             -- Se asume que id_ntemp será usado como id_nf
+        id_est,
+        id_mat,
+        id_doc,
+        n1,
+        n2,
+        n3,
+        (n1 * 0.30 + n2 * 0.30 + n3 * 0.40) AS nf,
+        CASE 
+            WHEN (n1 * 0.30 + n2 * 0.30 + n3 * 0.40) >= 7 THEN 1
+            ELSE 0
+        END AS est
+    FROM tbl_ntemp;
+
+    -- Borrar todos los datos de la tabla temporal
+    DELETE FROM tbl_ntemp;
+END
+GO
+
