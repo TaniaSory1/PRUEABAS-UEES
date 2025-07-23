@@ -1,0 +1,111 @@
+USE [Candidato01] 
+/****** CREACION DE TABLAS ******/
+
+
+--TABLA DOCENTE
+CREATE TABLE [dbo].[tbl_docente](
+	[id_docente] [numeric](18, 0) NOT NULL,
+	[id_rol] [numeric](18, 0) NOT NULL,
+	[nombre] [varchar](100) NOT NULL,
+	[ident] [numeric](18, 0) NOT NULL,
+	[pws] [char](12) NOT NULL,
+ CONSTRAINT [PK_tbl_docente] PRIMARY KEY CLUSTERED 
+(
+	[id_docente] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+
+--TABLA ESTUDIANTE
+CREATE TABLE [dbo].[tbl_est](
+	[id_est] [numeric](18, 0) NOT NULL,
+	[nombre] [nchar](10) NOT NULL,
+	[carrera] [nchar](10) NULL,
+	[identif] [nchar](10) NULL,
+	[pws] [nchar](10) NULL,
+ CONSTRAINT [PK_tbl_est] PRIMARY KEY CLUSTERED 
+(
+	[id_est] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+--TABLA MATERIAS
+CREATE TABLE [dbo].[tbl_materias](
+	[id_mat] [numeric](18, 0) NOT NULL,
+	[nombre] [varchar](100) NOT NULL,
+ CONSTRAINT [PK_tbl_materias] PRIMARY KEY CLUSTERED 
+(
+	[id_mat] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+
+--TABLA NOTAS FINALES
+CREATE TABLE [dbo].[tbl_nfn](
+	[id_nf] [numeric](18, 0) NOT NULL,
+	[id_est] [numeric](18, 0) NOT NULL,
+	[id_mat] [numeric](18, 0) NOT NULL,
+	[id_doc] [numeric](18, 0) NOT NULL,
+	[n1] [decimal](18, 2) NOT NULL,
+	[n2] [decimal](18, 2) NOT NULL,
+	[n3] [decimal](18, 2) NOT NULL,
+	[nf] [decimal](18, 2) NOT NULL,
+	[est] [decimal](18, 2) NOT NULL,
+ CONSTRAINT [PK_tbl_nfn] PRIMARY KEY CLUSTERED 
+(
+	[id_nf] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+
+--TABLA NOTAS TEMPORALES
+CREATE TABLE [dbo].[tbl_ntemp](
+	[id_ntemp] [numeric](18, 0) NOT NULL,
+	[id_est] [numeric](18, 0) NOT NULL,
+	[id_mat] [numeric](18, 0) NOT NULL,
+	[id_doc] [numeric](18, 0) NOT NULL,
+	[n1] [decimal](18, 2) NOT NULL,
+	[n2] [decimal](18, 2) NOT NULL,
+	[n3] [decimal](18, 2) NOT NULL,
+ CONSTRAINT [PK_TBL_TEMPS] PRIMARY KEY CLUSTERED 
+(
+	[id_ntemp] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+
+--TABLA ROL
+CREATE TABLE [dbo].[tbl_rol](
+	[id_rol] [numeric](18, 0) NOT NULL,
+	[nombre] [nchar](10) NOT NULL,
+ CONSTRAINT [PK_tbl_rol] PRIMARY KEY CLUSTERED 
+(
+	[id_rol] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+
+
+ALTER TABLE [dbo].[tbl_docente]  WITH CHECK ADD  CONSTRAINT [FK_tbl_docente_tbl_rol] FOREIGN KEY([id_rol])
+REFERENCES [dbo].[tbl_rol] ([id_rol])
+
+ALTER TABLE [dbo].[tbl_docente] CHECK CONSTRAINT [FK_tbl_docente_tbl_rol]
+
+ALTER TABLE [dbo].[tbl_nfn]  WITH CHECK ADD  CONSTRAINT [FK_tbl_nfn_tbl_docente] FOREIGN KEY([id_doc])
+REFERENCES [dbo].[tbl_docente] ([id_docente])
+
+ALTER TABLE [dbo].[tbl_nfn] CHECK CONSTRAINT [FK_tbl_nfn_tbl_docente]
+
+ALTER TABLE [dbo].[tbl_nfn]  WITH CHECK ADD  CONSTRAINT [FK_tbl_nfn_tbl_est] FOREIGN KEY([id_est])
+REFERENCES [dbo].[tbl_est] ([id_est])
+
+ALTER TABLE [dbo].[tbl_nfn] CHECK CONSTRAINT [FK_tbl_nfn_tbl_est]
+
+ALTER TABLE [dbo].[tbl_nfn]  WITH CHECK ADD  CONSTRAINT [FK_tbl_nfn_tbl_materias] FOREIGN KEY([id_mat])
+REFERENCES [dbo].[tbl_materias] ([id_mat])
+
+ALTER TABLE [dbo].[tbl_nfn] CHECK CONSTRAINT [FK_tbl_nfn_tbl_materias]
+
+--store procedures
